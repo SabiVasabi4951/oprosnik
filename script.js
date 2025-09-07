@@ -212,7 +212,7 @@ function serializeForm(form) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('arfid-form');
+  const form = document.getElementById('quizForm');
   if (!form) return;
 
   form.addEventListener('submit', async (e) => {
@@ -233,3 +233,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
