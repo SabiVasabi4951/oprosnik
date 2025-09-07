@@ -1,88 +1,70 @@
-
-const whoData = [
-  // Пример данных
-  { name: "Alice", score: 10 },
-  { name: "Bob", score: 8 },
-  { name: "Charlie", score: 12 }
-];
-
-// -------------------
-// WHO LMS калькулятор
-// -------------------
+// ===== WHO LMS калькулятор =====
 function calculateBMI() {
-  const height = parseFloat(document.getElementById("height").value);
-  const weight = parseFloat(document.getElementById("weight").value);
+  const measureDate = new Date(document.getElementById('measure').value);
+  const birthDate = new Date(document.getElementById('birth').value);
+  const sex = document.getElementById('sex').value;
+  const height = parseFloat(document.getElementById('height').value);
+  const weight = parseFloat(document.getElementById('weight').value);
 
-  if (!height || !weight) {
-    alert("Введите рост и вес!");
+  if (!measureDate || !birthDate || !height || !weight) {
+    document.getElementById('result').innerText = "Заполните все поля WHO LMS!";
     return;
   }
 
+  const ageMonths = (measureDate - birthDate) / (1000 * 60 * 60 * 24 * 30.4375);
   const bmi = weight / ((height / 100) ** 2);
-  let category = "";
 
-  if (bmi < 18.5) category = "Недостаточный вес";
-  else if (bmi < 25) category = "Нормальный вес";
-  else if (bmi < 30) category = "Избыточный вес";
-  else category = "Ожирение";
-
-  document.getElementById("result").innerText = BMI: ${bmi.toFixed(1)} (${category});
+  document.getElementById('result').innerText =
+    Возраст: ${ageMonths.toFixed(1)} мес\nBMI: ${bmi.toFixed(2)};
 }
 
-// -------------------
-// ARFID опросник
-// -------------------
+// ===== ARFID тест =====
 function calculateResult() {
-  const form = document.getElementById("quizForm");
-  const formData = new FormData(form);
-  const result = {};
+  const form = document.getElementById('quizForm');
+  const data = new FormData(form);
+  let total = 0;
 
-  // Считаем суммы по доменам
-  result.medical = 0;
-  result.nutrition = 0;
-  result.skills = 0;
-
-  for (const [key, value] of formData.entries()) {
-    const num = parseInt(value);
-    if (key.startsWith("q1") || key.startsWith("q2")) result.medical += num;
-    if (key.startsWith("q8")) result.nutrition += num;
-    if (key.startsWith("q17")) result.skills += num;
-    // checkbox
-    if (key === "parent") result.parent = true;
-    if (key === "redflag") result.redflag = true;
+  for (let [key, value] of data.entries()) {
+    if (!isNaN(value)) total += parseInt(value);
   }
 
-  document.getElementById("testResult").innerText =
-    Результаты ARFID:\nМедицинский домен: ${result.medical}\nНутритивный домен: ${result.nutrition}\nНавыки кормления: ${result.skills}\n +
-    (result.parent ? "Родительский блок отмечен\n" : "") +
-    (result.redflag ? "Красные флаги отмечены\n" : "");
+  // Чекбоксы
+  const parentChecked = form.querySelector('input[name="parent"]').checked;
+  const redflagChecked = form.querySelector('input[name="redflag"]').checked;
+
+  let resultText = Сумма баллов: ${total}\n;
+  resultText += parentChecked ? "Родительский блок отмечен ✅\n" : "";
+  resultText += redflagChecked ? "Красные флаги отмечены ❌\n" : "";
+
+  document.getElementById('testResult').innerText = resultText;
 }
 
-// -------------------
-// Экспорт в Excel
-// -------------------
+// ===== Экспорт в Excel =====
 function exportToExcel() {
   const wb = XLSX.utils.book_new();
-  const whoSheet = XLSX.utils.json_to_sheet(whoData);
 
-  // Добавим данные ARFID с формы
-  const arfidForm = document.getElementById("quizForm");
-  const formData = new FormData(arfidForm);
-  const arfidData = {};
-  for (const [key, value] of formData.entries()) arfidData[key] = value;
-
-  const arfidSheet = XLSX.utils.json_to_sheet([arfidData]);
-
+  // WHO LMS
+  const whoData = [
+    ["Дата измерения", document.getElementById('measure').value],
+    ["Дата рождения", document.getElementById('birth').value],
+    ["Пол", document.getElementById('sex').value],
+    ["Рост (см)", document.getElementById('height').value],
+    ["Вес (кг)", document.getElementById('weight').value],
+    ["BMI / Возраст (мес)", document.getElementById('result').innerText]
+  ];
+  const whoSheet = XLSX.utils.aoa_to_sheet(whoData);
   XLSX.utils.book_append_sheet(wb, whoSheet, "WHO LMS");
+
+  // ARFID
+  const form = document.getElementById('quizForm');
+  const data = new FormData(form);
+  const arfidData = [["Вопрос", "Ответ"]];
+  for (let [key, value] of data.entries()) {
+    arfidData.push([key, value]);
+  }
+  arfidData.push(["Результат теста", document.getElementById('testResult').innerText]);
+  const arfidSheet = XLSX.utils.aoa_to_sheet(arfidData);
   XLSX.utils.book_append_sheet(wb, arfidSheet, "ARFID");
 
   XLSX.writeFile(wb, "results.xlsx");
 }
-
-// -------------------
-// Запуск после загрузки
-// -------------------
-document.addEventListener("DOMContentLoaded", () => {
-  // Можно добавить обработчики кнопок через JS
-  // Но в HTML мы уже указали onclick, так что необязательно
-});
