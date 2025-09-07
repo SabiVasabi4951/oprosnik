@@ -189,3 +189,47 @@ function exportToExcel() {
   XLSX.utils.book_append_sheet(wb, ws, "Results");
   XLSX.writeFile(wb, "results.xlsx");
 }
+const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxEt2avTH2SAyL1TCgswa_p8P05fYteRfvQYyh1HqtbXSWdiMM_BjcXfH91xcxutPLR/exec';
+
+function serializeForm(form) {
+  const data = {};
+  const fd = new FormData(form);
+
+  for (const [key, value] of fd.entries()) {
+    if (data[key] !== undefined) {
+      if (!Array.isArray(data[key])) data[key] = [data[key]];
+      data[key].push(value);
+    } else {
+      data[key] = value;
+    }
+  }
+
+  // добавим немного метаданных
+  data._timestamp = new Date().toISOString();
+  data._page = location.href;
+
+  return data;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('arfid-form');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = serializeForm(form);
+
+    try {
+      await fetch(GAS_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      alert('Ответ сохранён в Google Sheets ✅');
+      // form.reset(); // если нужно очищать форму после отправки
+    } catch (err) {
+      console.error(err);
+      alert('Не удалось отправить в Google Sheets. Проверь URL в GAS_ENDPOINT.');
+    }
+  });
+});
