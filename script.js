@@ -1,6 +1,6 @@
+// ==== WHO LMS данные ====
 let whoData = null;
 
-// === Загрузка WHO LMS ===
 fetch("who_lms_5_19.json")
   .then(res => res.json())
   .then(data => {
@@ -9,9 +9,7 @@ fetch("who_lms_5_19.json")
   })
   .catch(err => console.error("❌ Ошибка загрузки WHO LMS:", err));
 
-// === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
-
-// определяем: ключи возраста в месяцах или в годах
+// ==== Вспомогательные функции WHO ====
 function detectKeyScale(domain) {
   const keys = Object.keys(domain).map(k => parseFloat(k)).filter(n => !isNaN(n));
   if (keys.length === 0) return null;
@@ -19,7 +17,6 @@ function detectKeyScale(domain) {
   return maxKey > 30 ? "months" : "years";
 }
 
-// берём ближайшую LMS-запись
 function getLMS(domain, ageMonths) {
   if (!domain) return null;
   const keys = Object.keys(domain).map(k => parseFloat(k)).filter(n => !isNaN(n));
@@ -35,7 +32,6 @@ function getLMS(domain, ageMonths) {
   return domain[String(closest)] || null;
 }
 
-// считаем Z-score
 function calcZscore(value, ageMonths, sex, type) {
   const domain = whoData?.[sex]?.[type];
   if (!domain) return null;
@@ -54,7 +50,6 @@ function calcZscore(value, ageMonths, sex, type) {
   }
 }
 
-// erf для нормального распределения
 function erf(x) {
   const sign = x >= 0 ? 1 : -1;
   x = Math.abs(x);
@@ -65,7 +60,6 @@ function erf(x) {
   return sign * y;
 }
 
-// Z → перцентиль
 function zToPercentile(z) {
   if (z === null || isNaN(z)) return "-";
   const p = 0.5 * (1 + erf(z / Math.SQRT2));
@@ -73,7 +67,7 @@ function zToPercentile(z) {
   return Math.max(0, Math.min(100, pct));
 }
 
-// === КАЛЬКУЛЯТОР WHO ===
+// ==== WHO калькулятор ====
 function calculateBMI() {
   if (!whoData) {
     alert("⚠ Данные WHO ещё не загружены");
@@ -111,11 +105,10 @@ function calculateBMI() {
     <p><b>ИМТ:</b> ${bmi.toFixed(1)} — Z=${zB !== null ? zB.toFixed(2) : "-"}, p=${pB}</p>
   `;
 
-  // сохраним для экспорта
   window.lastCalc = { ageMonths, height, weight, bmi, zH, pH, zW, pW, zB, pB };
 }
 
-// === ОПРОСНИК ===
+// ==== ARFID опросник ====
 function calculateResult() {
   const clinic = document.getElementById("clinic").value.trim();
   if (!clinic) {
@@ -135,7 +128,6 @@ function calculateResult() {
     redflags: 0
   };
 
-  // собираем ответы
   for (let [key, val] of answers.entries()) {
     if (key.startsWith("q")) {
       const num = parseInt(key.substring(1));
@@ -146,58 +138,29 @@ function calculateResult() {
     }
   }
 
-  // родительский блок
-  document.querySelectorAll("input[name='parent']:checked").forEach(() => {
-    scores.parents += 1;
-  });
+  document.querySelectorAll("input[name='parent']:checked").forEach(() => scores.parents++);
+  document.querySelectorAll("input[name='redflag']:checked").forEach(() => scores.redflags++);
 
-  // красные флаги
-  document.querySelectorAll("input[name='redflag']:checked").forEach(() => {
-    scores.redflags += 1;
-  });
+  function interpretMedical(n){ if(n===0)return"нет значимых заболеваний"; if(n<=2)return"лёгкая медицинская отягощенность"; return"Высокий риск (следует исключить органическую патологию)";}
+  function interpretNutritive(n){ if(n===0)return"питание удовлетворительное"; if(n===1)return"лёгкие трудности"; if(n===2)return"выраженные ограничения"; return"риск нутритивной недостаточности";}
+  function interpretFeeding(n){ if(n===0)return"адекватные навыки"; if(n===1)return"умеренные трудности"; return"тяжёлые нарушения навыков кормления";}
+  function interpretPsychosocial(n){ if(n===0)return"нет влияния"; if(n<=2)return"умеренное влияние"; return"выраженные психосоциальные последствия";}
 
-  // интерпретации по доменам
-  function interpretMedical(n) {
-    if (n === 0) return "нет значимых заболеваний";
-    if (n <= 2) return "лёгкая медицинская отягощенность";
-    return "Высокий риск (следует исключить органическую патологию)";
-  }
-
-  function interpretNutritive(n) {
-    if (n === 0) return "питание удовлетворительное";
-    if (n === 1) return "лёгкие трудности";
-    if (n === 2) return "выраженные ограничения";
-    return "риск нутритивной недостаточности";
-  }
-
-  function interpretFeeding(n) {
-    if (n === 0) return "адекватные навыки";
-    if (n === 1) return "умеренные трудности";
-    return "тяжёлые нарушения навыков кормления";
-  }
-
-  function interpretPsychosocial(n) {
-    if (n === 0) return "нет влияния";
-    if (n <= 2) return "умеренное влияние";
-    return "выраженные психосоциальные последствия";
-  }
-
-  // общий риск ARFID
   let domainsPositive = 0;
-  if (scores.medical > 0) domainsPositive++;
-  if (scores.nutritive > 0) domainsPositive++;
-  if (scores.feeding > 0) domainsPositive++;
-  if (scores.psychosocial > 0) domainsPositive++;
+  if(scores.medical>0) domainsPositive++;
+  if(scores.nutritive>0) domainsPositive++;
+  if(scores.feeding>0) domainsPositive++;
+  if(scores.psychosocial>0) domainsPositive++;
 
   let arfidx;
-  if (scores.redflags > 0) {
-    arfidx = "‼ Хоть 1 красный флаг = вызвать 103, госпитализация";
-  } else if (scores.medical + scores.nutritive + scores.feeding + scores.psychosocial <= 3 && domainsPositive === 0) {
-    arfidx = "низкая вероятность ARFID";
-  } else if ((scores.medical + scores.nutritive + scores.feeding + scores.psychosocial <= 6) || domainsPositive === 1) {
-    arfidx = "средняя вероятность ARFID → консультация гастроэнтеролога + анализы";
-  } else {
-    arfidx = "высокая вероятность ARFID → мультидисциплинарная команда (гастроэнтеролог, feeding терапевт, психиатр, нутрициолог)";
+  if(scores.redflags>0){
+    arfidx="‼ Хоть 1 красный флаг = вызвать 103, госпитализация";
+  } else if(scores.medical+scores.nutritive+scores.feeding+scores.psychosocial<=3 && domainsPositive===0){
+    arfidx="низкая вероятность ARFID";
+  } else if((scores.medical+scores.nutritive+scores.feeding+scores.psychosocial<=6) || domainsPositive===1){
+    arfidx="средняя вероятность ARFID → консультация гастроэнтеролога + анализы";
+  } else{
+    arfidx="высокая вероятность ARFID → мультидисциплинарная команда (гастроэнтеролог, feeding терапевт, психиатр, нутрициолог)";
   }
 
   const resultText = `
@@ -214,7 +177,7 @@ function calculateResult() {
   document.getElementById("testResult").innerHTML = resultText;
 }
 
-// === ЭКСПОРТ В EXCEL ===
+// ==== Экспорт в Excel ====
 function exportToExcel() {
   const wb = XLSX.utils.book_new();
   const ws_data = [
@@ -225,4 +188,9 @@ function exportToExcel() {
   const ws = XLSX.utils.aoa_to_sheet(ws_data);
   XLSX.utils.book_append_sheet(wb, ws, "Results");
   XLSX.writeFile(wb, "results.xlsx");
+}
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  XLSX.utils.book_append_sheet(wb, ws, "Results");
+  XLSX.writeFile(wb, "results.xlsx");
+
 }
