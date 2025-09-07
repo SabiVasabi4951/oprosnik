@@ -189,8 +189,4 @@ function exportToExcel() {
   XLSX.utils.book_append_sheet(wb, ws, "Results");
   XLSX.writeFile(wb, "results.xlsx");
 }
-  const ws = XLSX.utils.aoa_to_sheet(ws_data);
-  XLSX.utils.book_append_sheet(wb, ws, "Results");
-  XLSX.writeFile(wb, "results.xlsx");
 
-}
