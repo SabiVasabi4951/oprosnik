@@ -108,7 +108,8 @@ const resultText = `
   <p><b>Заключение:</b> ${arfidx}</p>
 `;
 
-document.getElementById("testResult").innerHTML = resultText;
+document.getElementById("result").innerHTML = resultText;
+
 
 }
 
@@ -119,11 +120,12 @@ function exportToExcel() {
     ["Поликлиника", document.getElementById("clinic").value],
     ["Возраст", document.getElementById("age").value],
     ["Пол", document.getElementById("gender").value],
-    ["Результаты теста", document.getElementById("testResult").innerText]
+    ["Результаты теста", document.getElementById("result").innerText]
   ];
   const ws = XLSX.utils.aoa_to_sheet(ws_data);
   XLSX.utils.book_append_sheet(wb, ws, "Results");
   XLSX.writeFile(wb, "results.xlsx");
 }
+
 
 
