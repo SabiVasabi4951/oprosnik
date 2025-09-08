@@ -7,42 +7,39 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Опросник ARFID </h1>
+  <h1>Опросник ARFID</h1>
 
-  <!-- Опросник -->
   <form id="quizForm">
-    <!-- Обязательный вопрос -->
     <h2>Общие сведения</h2>
 
-<label for="clinic">Номер поликлиники:
-  <input type="text" id="clinic" name="clinic" required>
-</label>
-<br><br>
+    <label for="clinic">Номер поликлиники:
+      <input type="text" id="clinic" name="clinic" required>
+    </label>
+    <br><br>
 
-<label for="age">Возраст (лет):
-  <input type="number" id="age" name="age" min="0" required>
-</label>
-<br><br>
+    <label for="age">Возраст (лет):
+      <input type="number" id="age" name="age" min="0" required>
+    </label>
+    <br><br>
 
-<label for="gender">Пол:
-  <select id="gender" name="gender" required>
-    <option value="">-- выберите --</option>
-    <option value="male">Мужчина</option>
-    <option value="female">Женщина</option>
-  </select>
-</label>
-<br><br>
+    <label for="gender">Пол:
+      <select id="gender" name="gender" required>
+        <option value="">-- выберите --</option>
+        <option value="male">Мужчина</option>
+        <option value="female">Женщина</option>
+      </select>
+    </label>
+    <br><br>
 
-<label for="height">Рост (см):
-  <input type="number" id="height" name="height" min="30" max="250" required>
-</label>
-<br><br>
+    <label for="height">Рост (см):
+      <input type="number" id="height" name="height" min="30" max="250" required>
+    </label>
+    <br><br>
 
-<label for="weight">Вес (кг):
-  <input type="number" id="weight" name="weight" min="2" max="300" required>
-</label>
-<br><br>
-
+    <label for="weight">Вес (кг):
+      <input type="number" id="weight" name="weight" min="2" max="300" required>
+    </label>
+    <br><br>
 
      <!-- Медицинский домен -->
 <h2>Медицинский домен</h2>
@@ -259,20 +256,15 @@
   <label><input type="checkbox" name="redflag" value="1"> Сильное беспокойство/плач вне кормлений</label>
   <label><input type="checkbox" name="redflag" value="1"> Задержка психомоторного развития</label>
 </div>
-    <button type="button" onclick="calculateResult()">Завершить тест</button>
+     <button type="submit">Завершить тест</button>
   </form>
 
   <h2>Результат теста</h2>
+  <div id="testResult">Здесь появится результат</div>
 
-  <hr>
+  <br>
+  <button id="exportBtn" type="button">Экспортировать в Excel</button>
 
-
-<!-- 🔹 Контейнер для результатов -->
-<div id="result">Здесь появятся показатели WHO</div>
-
-  <button type="button" onclick="exportToExcel()">Экспортировать в Excel</button>
-
-  <!-- Подключение JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="script.js"></script>
 </body>
