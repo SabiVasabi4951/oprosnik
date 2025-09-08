@@ -1,62 +1,53 @@
-// ==== ARFID опросник ====
+// скрипт: подсчёт ARFID + экспорт в Excel
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("quizForm");
+
+  // перехватываем submit: сначала валидность формы (покажет встроенные подсказки),
+  // затем — расчёт результата.
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    // покажет нативные подсказки для required/мин/макс и т.д.
+    if (!form.reportValidity()) return;
+    calculateResult();
+  });
+
+  // кнопка экспорта
+  document.getElementById("exportBtn").addEventListener("click", exportToExcel);
+});
+
 function calculateResult() {
-  const height = document.getElementById("height").value.trim();
-  const weight = document.getElementById("weight").value.trim();
   const clinic = document.getElementById("clinic").value.trim();
   const age = document.getElementById("age").value.trim();
   const gender = document.getElementById("gender").value;
+  const height = document.getElementById("height").value.trim();
+  const weight = document.getElementById("weight").value.trim();
 
-  // --- Проверки ---
-  if (!clinic) {
-    alert("⚠ Введите номер поликлиники!");
-    return;
-  }
-  if (!age) {
-    alert("⚠ Укажите возраст!");
-    return;
-  }
-  if (!gender) {
-    alert("⚠ Укажите пол!");
-    return;
-  }
-  if (!height) {
-    alert("⚠ Укажите рост!");
-    return;
-  }
-  if (!weight) {
-    alert("⚠ Укажите вес!");
-    return;
-  }
-
+  // Дополнительная (резервная) проверка — на случай, если форма не прошла reportValidity
+  if (!clinic) { alert("⚠ Введите номер поликлиники!"); return; }
+  if (!age)    { alert("⚠ Укажите возраст!"); return; }
+  if (!gender) { alert("⚠ Укажите пол!"); return; }
+  if (!height) { alert("⚠ Укажите рост!"); return; }
+  if (!weight) { alert("⚠ Укажите вес!"); return; }
 
   const form = document.getElementById("quizForm");
   const answers = new FormData(form);
 
-  let scores = {
-    medical: 0,
-    nutritive: 0,
-    feeding: 0,
-    psychosocial: 0,
-    parents: 0,
-    redflags: 0
-  };
+  let scores = { medical:0, nutritive:0, feeding:0, psychosocial:0, parents:0, redflags:0 };
 
-  // --- Подсчёт по доменам ---
   for (let [key, val] of answers.entries()) {
     if (key.startsWith("q")) {
       const num = parseInt(key.substring(1));
-      if (num <= 7) scores.medical += +val;
-      else if (num <= 16) scores.nutritive += +val;
-      else if (num <= 20) scores.feeding += +val;
-      else if (num <= 24) scores.psychosocial += +val;
+      const v = Number(val) || 0;
+      if (num <= 7) scores.medical += v;
+      else if (num <= 16) scores.nutritive += v;
+      else if (num <= 20) scores.feeding += v;
+      else if (num <= 24) scores.psychosocial += v;
     }
   }
 
-  // --- Родительский блок и красные флаги ---
   document.querySelectorAll("input[name='parent']:checked").forEach(() => scores.parents++);
   document.querySelectorAll("input[name='redflag']:checked").forEach(() => scores.redflags++);
 
-  // --- Интерпретации ---
   function interpretMedical(n) {
     if (n === 0) return "нет значимых заболеваний";
     if (n <= 2) return "лёгкая медицинская отягощенность";
@@ -79,7 +70,6 @@ function calculateResult() {
     return "выраженные психосоциальные последствия";
   }
 
-  // --- Общая оценка ---
   let domainsPositive = 0;
   if (scores.medical > 0) domainsPositive++;
   if (scores.nutritive > 0) domainsPositive++;
@@ -89,60 +79,71 @@ function calculateResult() {
   let arfidx;
   if (scores.redflags > 0) {
     arfidx = "‼ Хоть 1 красный флаг = вызвать 103, госпитализация";
-  } else if (
-    scores.medical + scores.nutritive + scores.feeding + scores.psychosocial <= 3 &&
-    domainsPositive === 0
-  ) {
+  } else if (scores.medical + scores.nutritive + scores.feeding + scores.psychosocial <= 3 && domainsPositive === 0) {
     arfidx = "низкая вероятность ARFID";
-  } else if (
-    scores.medical + scores.nutritive + scores.feeding + scores.psychosocial <= 6 ||
-    domainsPositive === 1
-  ) {
+  } else if (scores.medical + scores.nutritive + scores.feeding + scores.psychosocial <= 6 || domainsPositive === 1) {
     arfidx = "средняя вероятность ARFID → консультация гастроэнтеролога + анализы";
   } else {
     arfidx = "высокая вероятность ARFID → мультидисциплинарная команда (гастроэнтеролог, feeding терапевт, психиатр, нутрициолог)";
   }
 
-  // --- Формирование текста результата ---
-const resultText = `
-  <p><b>Поликлиника:</b> ${clinic}</p>
-  <p><b>Возраст:</b> ${age} лет</p>
-  <p><b>Пол:</b> ${gender === "male" ? "Мужчина" : "Женщина"}</p>
-  <p><b>Рост:</b> ${height} см</p>
-  <p><b>Вес:</b> ${weight} кг</p>
+  const resultText = `
+    <p><b>Поликлиника:</b> ${escapeHtml(clinic)}</p>
+    <p><b>Возраст:</b> ${escapeHtml(age)} лет</p>
+    <p><b>Пол:</b> ${gender === "male" ? "Мужчина" : "Женщина"}</p>
+    <p><b>Рост:</b> ${escapeHtml(height)} см</p>
+    <p><b>Вес:</b> ${escapeHtml(weight)} кг</p>
+    <hr>
+    <p><b>Медицинский домен:</b> ${scores.medical} — ${interpretMedical(scores.medical)}</p>
+    <p><b>Нутритивный домен:</b> ${scores.nutritive} — ${interpretNutritive(scores.nutritive)}</p>
+    <p><b>Навыки кормления:</b> ${scores.feeding} — ${interpretFeeding(scores.feeding)}</p>
+    <p><b>Психосоциальный домен:</b> ${scores.psychosocial} — ${interpretPsychosocial(scores.psychosocial)}</p>
+    <p><b>Родительский блок:</b> ${scores.parents} отмечено</p>
+    <p><b>Красные флаги:</b> ${scores.redflags} отмечено</p>
+    <hr>
+    <p><b>Заключение:</b> ${arfidx}</p>
+  `;
 
-  <hr>
-  <p><b>Медицинский домен:</b> ${scores.medical} — ${interpretMedical(scores.medical)}</p>
-  <p><b>Нутритивный домен:</b> ${scores.nutritive} — ${interpretNutritive(scores.nutritive)}</p>
-  <p><b>Навыки кормления:</b> ${scores.feeding} — ${interpretFeeding(scores.feeding)}</p>
-  <p><b>Психосоциальный домен:</b> ${scores.psychosocial} — ${interpretPsychosocial(scores.psychosocial)}</p>
-  <p><b>Родительский блок:</b> ${scores.parents} отмечено</p>
-  <p><b>Красные флаги:</b> ${scores.redflags} отмечено</p>
-  <hr>
-  <p><b>Заключение:</b> ${arfidx}</p>
-`;
+  // показываем результат в контейнере
+  document.getElementById("testResult").innerHTML = resultText;
 
-document.getElementById("result").innerHTML = resultText;
-
-
+  // сохраняем последний результат (для экспорта, если нужно)
+  window.lastARFIDResult = {
+    clinic, age, gender, height, weight, scores, arfidx, plainText: document.getElementById("testResult").innerText
+  };
 }
 
-// ==== Экспорт в Excel ====
+// безопасный escape для вывода в HTML (необязательно, но лучше)
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 function exportToExcel() {
+  // берем значения прямо из полей / результата
+  const clinic = document.getElementById("clinic").value || "";
+  const age = document.getElementById("age").value || "";
+  const gender = document.getElementById("gender").value || "";
+  const height = document.getElementById("height").value || "";
+  const weight = document.getElementById("weight").value || "";
+  const resultText = document.getElementById("testResult").innerText || "";
+
   const wb = XLSX.utils.book_new();
   const ws_data = [
-  ["Поликлиника", clinic],
-  ["Возраст", age],
-  ["Пол", gender],
-  ["Рост", height],
-  ["Вес", weight],
-  ["Результаты теста", document.getElementById("testResult").innerText]
-];
-
+    ["Поликлиника", clinic],
+    ["Возраст", age],
+    ["Пол", gender],
+    ["Рост (см)", height],
+    ["Вес (кг)", weight],
+    ["Результаты теста", resultText]
+  ];
   const ws = XLSX.utils.aoa_to_sheet(ws_data);
   XLSX.utils.book_append_sheet(wb, ws, "Results");
   XLSX.writeFile(wb, "results.xlsx");
 }
+
 
 
 
