@@ -93,20 +93,23 @@ function calculateResult() {
   }
 
   // --- Формирование текста результата ---
-  const resultText = `
-    <p><b>Поликлиника:</b> ${clinic}</p>
-    <p><b>Возраст:</b> ${age} лет</p>
-    <p><b>Пол:</b> ${gender === "male" ? "Мужчина" : "Женщина"}</p>
-    <hr>
-    <p><b>Медицинский домен:</b> ${scores.medical} — ${interpretMedical(scores.medical)}</p>
-    <p><b>Нутритивный домен:</b> ${scores.nutritive} — ${interpretNutritive(scores.nutritive)}</p>
-    <p><b>Навыки кормления:</b> ${scores.feeding} — ${interpretFeeding(scores.feeding)}</p>
-    <p><b>Психосоциальный домен:</b> ${scores.psychosocial} — ${interpretPsychosocial(scores.psychosocial)}</p>
-    <p><b>Родительский блок:</b> ${scores.parents} отмечено</p>
-    <p><b>Красные флаги:</b> ${scores.redflags} отмечено</p>
-    <hr>
-    <p><b>Заключение:</b> ${arfidx}</p>
-  `;
+const resultText = `
+  <p><b>Поликлиника:</b> ${clinic}</p>
+  <p><b>Возраст:</b> ${age} лет</p>
+  <p><b>Пол:</b> ${gender === "male" ? "Мужчина" : "Женщина"}</p>
+  <hr>
+  <p><b>Медицинский домен:</b> ${scores.medical} — ${interpretMedical(scores.medical)}</p>
+  <p><b>Нутритивный домен:</b> ${scores.nutritive} — ${interpretNutritive(scores.nutritive)}</p>
+  <p><b>Навыки кормления:</b> ${scores.feeding} — ${interpretFeeding(scores.feeding)}</p>
+  <p><b>Психосоциальный домен:</b> ${scores.psychosocial} — ${interpretPsychosocial(scores.psychosocial)}</p>
+  <p><b>Родительский блок:</b> ${scores.parents} отмечено</p>
+  <p><b>Красные флаги:</b> ${scores.redflags} отмечено</p>
+  <hr>
+  <p><b>Заключение:</b> ${arfidx}</p>
+`;
+
+document.getElementById("testResult").innerHTML = resultText;
+
 }
 
 // ==== Экспорт в Excel ====
@@ -122,4 +125,5 @@ function exportToExcel() {
   XLSX.utils.book_append_sheet(wb, ws, "Results");
   XLSX.writeFile(wb, "results.xlsx");
 }
+
 
