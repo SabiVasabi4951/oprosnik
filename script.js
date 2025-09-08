@@ -1,5 +1,7 @@
 // ==== ARFID опросник ====
 function calculateResult() {
+  const height = document.getElementById("height").value.trim();
+  const weight = document.getElementById("weight").value.trim();
   const clinic = document.getElementById("clinic").value.trim();
   const age = document.getElementById("age").value.trim();
   const gender = document.getElementById("gender").value;
@@ -17,6 +19,15 @@ function calculateResult() {
     alert("⚠ Укажите пол!");
     return;
   }
+  if (!height) {
+    alert("⚠ Укажите рост!");
+    return;
+  }
+  if (!weight) {
+    alert("⚠ Укажите вес!");
+    return;
+  }
+
 
   const form = document.getElementById("quizForm");
   const answers = new FormData(form);
@@ -97,6 +108,9 @@ const resultText = `
   <p><b>Поликлиника:</b> ${clinic}</p>
   <p><b>Возраст:</b> ${age} лет</p>
   <p><b>Пол:</b> ${gender === "male" ? "Мужчина" : "Женщина"}</p>
+  <p><b>Рост:</b> ${height} см</p>
+  <p><b>Вес:</b> ${weight} кг</p>
+
   <hr>
   <p><b>Медицинский домен:</b> ${scores.medical} — ${interpretMedical(scores.medical)}</p>
   <p><b>Нутритивный домен:</b> ${scores.nutritive} — ${interpretNutritive(scores.nutritive)}</p>
@@ -117,15 +131,19 @@ document.getElementById("result").innerHTML = resultText;
 function exportToExcel() {
   const wb = XLSX.utils.book_new();
   const ws_data = [
-    ["Поликлиника", document.getElementById("clinic").value],
-    ["Возраст", document.getElementById("age").value],
-    ["Пол", document.getElementById("gender").value],
-    ["Результаты теста", document.getElementById("result").innerText]
-  ];
+  ["Поликлиника", clinic],
+  ["Возраст", age],
+  ["Пол", gender],
+  ["Рост", height],
+  ["Вес", weight],
+  ["Результаты теста", document.getElementById("testResult").innerText]
+];
+
   const ws = XLSX.utils.aoa_to_sheet(ws_data);
   XLSX.utils.book_append_sheet(wb, ws, "Results");
   XLSX.writeFile(wb, "results.xlsx");
 }
+
 
 
 
