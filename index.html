@@ -13,20 +13,34 @@
   <form id="quizForm">
     <!-- Обязательный вопрос -->
     <h2>Общие сведения</h2>
-    <label for="clinic">Номер поликлиники:</label>
-<input type="text" id="clinic" name="clinic" required>
+
+<label for="clinic">Номер поликлиники:
+  <input type="text" id="clinic" name="clinic" required>
+</label>
 <br><br>
 
-<label for="age">Возраст:</label>
-<input type="number" id="age" name="age" min="0" required>
+<label for="age">Возраст (лет):
+  <input type="number" id="age" name="age" min="0" required>
+</label>
 <br><br>
 
-<label for="gender">Пол:</label>
-<select id="gender" name="gender" required>
-  <option value="">-- Выберите пол --</option>
-  <option value="male">Мужчина</option>
-  <option value="female">Женщина</option>
-</select>
+<label for="gender">Пол:
+  <select id="gender" name="gender" required>
+    <option value="">-- выберите --</option>
+    <option value="male">Мужчина</option>
+    <option value="female">Женщина</option>
+  </select>
+</label>
+<br><br>
+
+<label for="height">Рост (см):
+  <input type="number" id="height" name="height" min="30" max="250" required>
+</label>
+<br><br>
+
+<label for="weight">Вес (кг):
+  <input type="number" id="weight" name="weight" min="2" max="300" required>
+</label>
 <br><br>
 
 
@@ -263,4 +277,5 @@
   <script src="script.js"></script>
 </body>
 </html>
+
 
