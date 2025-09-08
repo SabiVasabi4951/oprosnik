@@ -1,13 +1,11 @@
-// скрипт: подсчёт ARFID + экспорт в Excel
+// ==== скрипт: подсчёт ARFID + экспорт в Excel ====
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("quizForm");
 
-  // перехватываем submit: сначала валидность формы (покажет встроенные подсказки),
-  // затем — расчёт результата.
+  // при отправке формы: проверка и расчёт результата
   form.addEventListener("submit", function (e) {
     e.preventDefault();
-    // покажет нативные подсказки для required/мин/макс и т.д.
-    if (!form.reportValidity()) return;
+    if (!form.reportValidity()) return; // встроенная проверка required/min/max
     calculateResult();
   });
 
@@ -22,7 +20,7 @@ function calculateResult() {
   const height = document.getElementById("height").value.trim();
   const weight = document.getElementById("weight").value.trim();
 
-  // Дополнительная (резервная) проверка — на случай, если форма не прошла reportValidity
+  // резервные проверки
   if (!clinic) { alert("⚠ Введите номер поликлиники!"); return; }
   if (!age)    { alert("⚠ Укажите возраст!"); return; }
   if (!gender) { alert("⚠ Укажите пол!"); return; }
@@ -104,16 +102,14 @@ function calculateResult() {
     <p><b>Заключение:</b> ${arfidx}</p>
   `;
 
-  // показываем результат в контейнере
   document.getElementById("testResult").innerHTML = resultText;
 
-  // сохраняем последний результат (для экспорта, если нужно)
   window.lastARFIDResult = {
-    clinic, age, gender, height, weight, scores, arfidx, plainText: document.getElementById("testResult").innerText
+    clinic, age, gender, height, weight, scores, arfidx,
+    plainText: document.getElementById("testResult").innerText
   };
 }
 
-// безопасный escape для вывода в HTML (необязательно, но лучше)
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, "&amp;")
@@ -122,7 +118,6 @@ function escapeHtml(str) {
 }
 
 function exportToExcel() {
-  // берем значения прямо из полей / результата
   const clinic = document.getElementById("clinic").value || "";
   const age = document.getElementById("age").value || "";
   const gender = document.getElementById("gender").value || "";
@@ -143,8 +138,3 @@ function exportToExcel() {
   XLSX.utils.book_append_sheet(wb, ws, "Results");
   XLSX.writeFile(wb, "results.xlsx");
 }
-
-
-
-
-
