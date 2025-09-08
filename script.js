@@ -107,8 +107,6 @@ function calculateResult() {
     <hr>
     <p><b>Заключение:</b> ${arfidx}</p>
   `;
-
-  document.getElementById("testResult").innerHTML = resultText;
 }
 
 // ==== Экспорт в Excel ====
@@ -124,3 +122,4 @@ function exportToExcel() {
   XLSX.utils.book_append_sheet(wb, ws, "Results");
   XLSX.writeFile(wb, "results.xlsx");
 }
+
