@@ -1,16 +1,20 @@
 // ==== ARFID опросник ====
 function calculateResult() {
   const clinic = document.getElementById("clinic").value.trim();
+  const age = document.getElementById("age").value.trim();
+  const gender = document.getElementById("gender").value;
+
+  // --- Проверки ---
   if (!clinic) {
     alert("⚠ Введите номер поликлиники!");
     return;
   }
-
-  const age = document.getElementById("age").value;
-  const gender = document.querySelector("input[name='gender']:checked")?.value;
-
-  if (!age || !gender) {
-    alert("⚠ Укажите возраст и пол!");
+  if (!age) {
+    alert("⚠ Укажите возраст!");
+    return;
+  }
+  if (!gender) {
+    alert("⚠ Укажите пол!");
     return;
   }
 
@@ -26,6 +30,7 @@ function calculateResult() {
     redflags: 0
   };
 
+  // --- Подсчёт по доменам ---
   for (let [key, val] of answers.entries()) {
     if (key.startsWith("q")) {
       const num = parseInt(key.substring(1));
@@ -36,31 +41,58 @@ function calculateResult() {
     }
   }
 
+  // --- Родительский блок и красные флаги ---
   document.querySelectorAll("input[name='parent']:checked").forEach(() => scores.parents++);
   document.querySelectorAll("input[name='redflag']:checked").forEach(() => scores.redflags++);
 
-  function interpretMedical(n){ if(n===0)return"нет значимых заболеваний"; if(n<=2)return"лёгкая медицинская отягощенность"; return"Высокий риск (следует исключить органическую патологию)";}
-  function interpretNutritive(n){ if(n===0)return"питание удовлетворительное"; if(n===1)return"лёгкие трудности"; if(n===2)return"выраженные ограничения"; return"риск нутритивной недостаточности";}
-  function interpretFeeding(n){ if(n===0)return"адекватные навыки"; if(n===1)return"умеренные трудности"; return"тяжёлые нарушения навыков кормления";}
-  function interpretPsychosocial(n){ if(n===0)return"нет влияния"; if(n<=2)return"умеренное влияние"; return"выраженные психосоциальные последствия";}
-
-  let domainsPositive = 0;
-  if(scores.medical>0) domainsPositive++;
-  if(scores.nutritive>0) domainsPositive++;
-  if(scores.feeding>0) domainsPositive++;
-  if(scores.psychosocial>0) domainsPositive++;
-
-  let arfidx;
-  if(scores.redflags>0){
-    arfidx="‼ Хоть 1 красный флаг = вызвать 103, госпитализация";
-  } else if(scores.medical+scores.nutritive+scores.feeding+scores.psychosocial<=3 && domainsPositive===0){
-    arfidx="низкая вероятность ARFID";
-  } else if((scores.medical+scores.nutritive+scores.feeding+scores.psychosocial<=6) || domainsPositive===1){
-    arfidx="средняя вероятность ARFID → консультация гастроэнтеролога + анализы";
-  } else{
-    arfidx="высокая вероятность ARFID → мультидисциплинарная команда (гастроэнтеролог, feeding терапевт, психиатр, нутрициолог)";
+  // --- Интерпретации ---
+  function interpretMedical(n) {
+    if (n === 0) return "нет значимых заболеваний";
+    if (n <= 2) return "лёгкая медицинская отягощенность";
+    return "Высокий риск (следует исключить органическую патологию)";
+  }
+  function interpretNutritive(n) {
+    if (n === 0) return "питание удовлетворительное";
+    if (n === 1) return "лёгкие трудности";
+    if (n === 2) return "выраженные ограничения";
+    return "риск нутритивной недостаточности";
+  }
+  function interpretFeeding(n) {
+    if (n === 0) return "адекватные навыки";
+    if (n === 1) return "умеренные трудности";
+    return "тяжёлые нарушения навыков кормления";
+  }
+  function interpretPsychosocial(n) {
+    if (n === 0) return "нет влияния";
+    if (n <= 2) return "умеренное влияние";
+    return "выраженные психосоциальные последствия";
   }
 
+  // --- Общая оценка ---
+  let domainsPositive = 0;
+  if (scores.medical > 0) domainsPositive++;
+  if (scores.nutritive > 0) domainsPositive++;
+  if (scores.feeding > 0) domainsPositive++;
+  if (scores.psychosocial > 0) domainsPositive++;
+
+  let arfidx;
+  if (scores.redflags > 0) {
+    arfidx = "‼ Хоть 1 красный флаг = вызвать 103, госпитализация";
+  } else if (
+    scores.medical + scores.nutritive + scores.feeding + scores.psychosocial <= 3 &&
+    domainsPositive === 0
+  ) {
+    arfidx = "низкая вероятность ARFID";
+  } else if (
+    scores.medical + scores.nutritive + scores.feeding + scores.psychosocial <= 6 ||
+    domainsPositive === 1
+  ) {
+    arfidx = "средняя вероятность ARFID → консультация гастроэнтеролога + анализы";
+  } else {
+    arfidx = "высокая вероятность ARFID → мультидисциплинарная команда (гастроэнтеролог, feeding терапевт, психиатр, нутрициолог)";
+  }
+
+  // --- Формирование текста результата ---
   const resultText = `
     <p><b>Поликлиника:</b> ${clinic}</p>
     <p><b>Возраст:</b> ${age} лет</p>
@@ -85,7 +117,7 @@ function exportToExcel() {
   const ws_data = [
     ["Поликлиника", document.getElementById("clinic").value],
     ["Возраст", document.getElementById("age").value],
-    ["Пол", document.querySelector("input[name='gender']:checked")?.value],
+    ["Пол", document.getElementById("gender").value],
     ["Результаты теста", document.getElementById("testResult").innerText]
   ];
   const ws = XLSX.utils.aoa_to_sheet(ws_data);
